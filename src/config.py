@@ -1,13 +1,12 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    supabase_url: str
-    supabase_key: str
-    openai_api_key: str
-    embedding_model: str = "text-embedding-3-small"
-    llm_model: str = "gpt-4o-mini"
-    chunk_size: int = 512
-    chunk_overlap: int = 50
+    google_api_key: str
+    db_url: str  # PostgreSQL connection string for PgVector
+    embedding_model: str = "models/text-embedding-004"
+    llm_model: str = "gemini-2.0-flash-exp"
+    chunk_size: int = 1000
+    chunk_overlap: int = 200
     
     class Config:
         env_file = ".env"
