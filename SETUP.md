@@ -90,7 +90,7 @@ from src.storage.agno_knowledge import AgnoKnowledge
 kb = AgnoKnowledge()
 
 agent = Agent(
-    model=Gemini(id="gemini-2.0-flash-exp"),
+    model=Gemini(id="gemini-2.5-flash"),
     knowledge=kb.knowledge,
     search_knowledge=True
 )

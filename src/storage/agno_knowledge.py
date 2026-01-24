@@ -4,6 +4,8 @@ from agno.knowledge.reader.pdf_reader import PDFReader
 from agno.knowledge.chunking.semantic import SemanticChunking
 from agno.vectordb.pgvector import PgVector, SearchType
 from agno.knowledge.embedder.google import GeminiEmbedder
+from chonkie.embeddings import OpenAIEmbeddings # for semantic chunking
+
 
 from src.config import settings
 
@@ -14,7 +16,8 @@ class AgnoKnowledge:
     def __init__(self, table_name: str = "documents"):
         self.embedder = GeminiEmbedder(
             id=settings.embedding_model,
-            api_key=settings.google_api_key
+            api_key=settings.google_api_key,
+            dimensions=768
         )
         
         self.knowledge = Knowledge(
@@ -29,7 +32,7 @@ class AgnoKnowledge:
         # Semantic chunking preserves context better than fixed-size
         self.pdf_reader = PDFReader(
             chunking_strategy=SemanticChunking(
-                embedder=self.embedder,
+                embedder=OpenAIEmbeddings(model="text-embedding-3-small"),
                 chunk_size=settings.chunk_size,
                 similarity_threshold=0.5  # Keep related content together
             )
@@ -45,4 +48,4 @@ class AgnoKnowledge:
     
     def search(self, query: str, limit: int = 5):
         """Hybrid search (vector + keyword)."""
-        return self.knowledge.search(query=query, num_documents=limit)
+        return self.knowledge.search(query=query, max_results=limit)
