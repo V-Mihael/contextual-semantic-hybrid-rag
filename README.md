@@ -156,12 +156,33 @@ poetry run jupyter lab
 - LLM generates situating context for each chunk
 - Improves retrieval by 30-60%
 - Provides document-level awareness to each chunk
-- Trade-off: slower ingestion, higher cost
+- Uses Gemini 1.5 Flash (1M+ context, $0.075/M tokens)
+- Cost: ~$0.10 per 500-page book (one-time ingest)
 
 **Hybrid Search > Vector-Only**
 - Combines semantic similarity (vector) + keyword matching (BM25)
 - Handles both conceptual and specific queries
 - RRF (Reciprocal Rank Fusion) for result merging
+
+## Cost & Performance
+
+### Context Window Strategy
+
+Long documents (128k+ tokens) are handled efficiently:
+
+| Model | Context Window | Cost/M Input | Best For |
+|-------|----------------|--------------|----------|
+| Gemini 1.5 Flash | 1M+ | $0.075/M | Large books (recommended) |
+| Claude 3 Haiku | 200k | $0.25/M | Medium docs with caching |
+| GPT-4o-mini | 128k | $0.15/M | Short docs |
+
+### Ingestion Cost Examples
+
+- **500-page book**: ~$0.10 (one-time)
+- **Research paper (50 pages)**: ~$0.01
+- **Documentation set (1000 pages)**: ~$0.20
+
+**Key**: Context generation is one-time cost. Queries use only embeddings (nearly free).
 
 ## Project Structure
 

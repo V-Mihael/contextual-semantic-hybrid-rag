@@ -33,7 +33,9 @@ class EnhancedAgnoKnowledge:
             table_name: PostgreSQL table name for document storage.
         """
         self.embedder = GeminiEmbedder(
-            id=settings.embedding_model, api_key=settings.google_api_key
+            id=settings.embedding_model,
+            api_key=settings.google_api_key,
+            dimensions=768,
         )
 
         self.knowledge = Knowledge(
@@ -83,4 +85,4 @@ class EnhancedAgnoKnowledge:
         Returns:
             Search results from the knowledge base.
         """
-        return self.knowledge.search(query=query, num_documents=limit)
+        return self.knowledge.search(query=query, max_results=limit)
