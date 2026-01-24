@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Download sample PDFs from public domain sources."""
+
 import urllib.request
 from pathlib import Path
-
 
 SOURCES = {
     "wealth_of_nations.pdf": "https://ia801309.us.archive.org/21/items/inquiryintonatur01smit/inquiryintonatur01smit.pdf",
@@ -11,8 +11,13 @@ SOURCES = {
 }
 
 
-def download_file(url: str, output_path: Path):
-    """Download file with progress."""
+def download_file(url: str, output_path: Path) -> None:
+    """Download file from URL to local path.
+
+    Args:
+        url: Source URL to download from.
+        output_path: Destination path for the downloaded file.
+    """
     print(f"  📥 Downloading: {output_path.name}")
     try:
         urllib.request.urlretrieve(url, output_path)
@@ -21,24 +26,26 @@ def download_file(url: str, output_path: Path):
         print(f"  ❌ Failed: {e}")
 
 
-def main():
-    # Create directory
+def main() -> None:
+    """Download sample PDFs to data/pdfs directory."""
     pdf_dir = Path("data/pdfs")
     pdf_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"📚 Downloading {len(SOURCES)} sample PDFs to {pdf_dir}/\n")
-    
+
     for filename, url in SOURCES.items():
         output_path = pdf_dir / filename
-        
+
         if output_path.exists():
             print(f"  ⏭️  Skipping (already exists): {filename}")
             continue
-        
+
         download_file(url, output_path)
-    
+
     print(f"\n✨ Download complete! Files in {pdf_dir}/")
-    print(f"\n💡 Next step: python scripts/ingest_pdfs_agno.py --directory {pdf_dir}")
+    print(
+        f"\n💡 Next step: python scripts/ingest_pdfs_agno.py --directory {pdf_dir}"
+    )
 
 
 if __name__ == "__main__":
