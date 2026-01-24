@@ -3,6 +3,7 @@ from agno.knowledge.knowledge import Knowledge
 from agno.knowledge.reader.pdf_reader import PDFReader
 from agno.vectordb.pgvector import PgVector, SearchType
 from agno.knowledge.embedder.google import GeminiEmbedder
+from chonkie.embeddings import OpenAIEmbeddings # for semantic chunking
 
 from src.config import settings
 from src.ingestion.contextual_semantic_chunking import ContextualSemanticChunking
@@ -20,7 +21,7 @@ class EnhancedAgnoKnowledge:
     
     def __init__(self, table_name: str = "documents_enhanced"):
         self.embedder = GeminiEmbedder(
-            model=settings.embedding_model,
+            id=settings.embedding_model,
             api_key=settings.google_api_key
         )
         
@@ -36,7 +37,7 @@ class EnhancedAgnoKnowledge:
         # Context-enhanced semantic chunking
         self.pdf_reader = PDFReader(
             chunking_strategy=ContextualSemanticChunking(
-                embedder=self.embedder,
+                embedder=OpenAIEmbeddings(model="text-embedding-3-small"),
                 chunk_size=settings.chunk_size,
                 similarity_threshold=0.5
             )
