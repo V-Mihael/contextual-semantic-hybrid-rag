@@ -44,6 +44,8 @@ Context:"""
         embedder: Any,
         chunk_size: int = 1000,
         similarity_threshold: float = 0.5,
+        max_retries: int = 5,
+        retry_delay: float = 2.0,
     ) -> None:
         """Initialize contextual semantic chunking strategy.
 
@@ -51,6 +53,8 @@ Context:"""
             embedder: Embedding model for semantic similarity computation.
             chunk_size: Maximum size for each chunk in characters.
             similarity_threshold: Threshold for semantic boundary detection (0-1).
+            max_retries: Maximum retry attempts per chunk.
+            retry_delay: Initial delay between retries (exponential backoff).
         """
         self.semantic_chunker = SemanticChunking(
             embedder=embedder,
@@ -73,6 +77,8 @@ Context:"""
         ]
         self.current_model_index = 0
         self.last_request_time = 0.0
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
 
     def _rate_limit(self) -> None:
         """Enforce rate limiting between API calls."""
@@ -86,11 +92,12 @@ Context:"""
             time.sleep(min_interval - elapsed)
         self.last_request_time = time.time()
 
-    def _generate_context(self, prompt: str) -> str:
+    def _generate_context(self, prompt: str, retry_count: int = 0) -> str:
         """Generate context with API key and model fallback.
 
         Args:
             prompt: Context generation prompt.
+            retry_count: Current retry attempt number.
 
         Returns:
             Generated context text.
@@ -147,31 +154,64 @@ Context:"""
         semantic_chunks = self.semantic_chunker.chunk(document)
         contextual_chunks = []
         doc_preview = document.content[:5000]
+        failed_chunks = []
 
-        for chunk in semantic_chunks:
-            try:
-                self._rate_limit()
-
-                prompt = self.CONTEXT_PROMPT.format(
-                    whole_doc=doc_preview, chunk_content=chunk.content[:500]
-                )
-
-                context_prefix = self._generate_context(prompt)
-                if context_prefix:
-                    enhanced_content = (
-                        f"[CONTEXT: {context_prefix.strip()}]\n\n{chunk.content}"
+        for idx, chunk in enumerate(semantic_chunks):
+            context_prefix = None
+            
+            for attempt in range(self.max_retries):
+                try:
+                    self._rate_limit()
+                    prompt = self.CONTEXT_PROMPT.format(
+                        whole_doc=doc_preview, chunk_content=chunk.content[:500]
                     )
-                else:
-                    enhanced_content = chunk.content
+                    context_prefix = self._generate_context(prompt, attempt)
+                    break
+                except Exception as e:
+                    if attempt < self.max_retries - 1:
+                        delay = self.retry_delay * (2 ** attempt)
+                        print(f"⚠️  Chunk {idx + 1}: tentativa {attempt + 1} falhou. Retry em {delay:.1f}s...")
+                        time.sleep(delay)
+                    else:
+                        print(f"❌ Chunk {idx + 1}: falhou após {self.max_retries} tentativas")
+                        failed_chunks.append((idx, chunk))
 
-                contextual_chunks.append(
-                    Document(
-                        content=enhanced_content,
-                        meta_data=getattr(chunk, "meta_data", {}),
-                    )
+            if context_prefix:
+                enhanced_content = f"[CONTEXT: {context_prefix.strip()}]\n\n{chunk.content}"
+            else:
+                enhanced_content = chunk.content
+
+            contextual_chunks.append(
+                Document(
+                    content=enhanced_content,
+                    meta_data=getattr(chunk, "meta_data", {}),
                 )
-            except Exception as e:
-                print(f"Warning: Context generation failed: {e}")
-                contextual_chunks.append(chunk)
+            )
+
+        if failed_chunks:
+            print(f"\n🔄 Reprocessando {len(failed_chunks)} chunks sem contexto...")
+            for idx, chunk in failed_chunks:
+                for attempt in range(self.max_retries * 2):
+                    try:
+                        self._rate_limit()
+                        prompt = self.CONTEXT_PROMPT.format(
+                            whole_doc=doc_preview, chunk_content=chunk.content[:500]
+                        )
+                        context_prefix = self._generate_context(prompt, attempt)
+                        
+                        enhanced_content = f"[CONTEXT: {context_prefix.strip()}]\n\n{chunk.content}"
+                        contextual_chunks[idx] = Document(
+                            content=enhanced_content,
+                            meta_data=getattr(chunk, "meta_data", {}),
+                        )
+                        print(f"✅ Chunk {idx + 1}: contexto gerado com sucesso")
+                        break
+                    except Exception as e:
+                        if attempt < (self.max_retries * 2) - 1:
+                            delay = self.retry_delay * (2 ** (attempt % self.max_retries))
+                            print(f"⚠️  Chunk {idx + 1}: retry {attempt + 1} falhou. Aguardando {delay:.1f}s...")
+                            time.sleep(delay)
+                        else:
+                            print(f"❌ Chunk {idx + 1}: impossível gerar contexto após todas as tentativas")
 
         return contextual_chunks
