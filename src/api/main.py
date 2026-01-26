@@ -1,7 +1,7 @@
 """FastAPI application for RAG system."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional
 from agno.agent import Agent
@@ -9,15 +9,17 @@ from agno.models.google import Gemini
 from src.storage.contextual_agno_knowledge import ContextualAgnoKnowledge
 from agno.tools.yfinance import YFinanceTools
 from agno.tools.duckduckgo import DuckDuckGoTools
+from whatsapp import WhatsAppClient
 
 kb: Optional[ContextualAgnoKnowledge] = None
 agent: Optional[Agent] = None
+whatsapp_client: Optional[WhatsAppClient] = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize resources on startup and cleanup on shutdown."""
-    global kb, agent
+    global kb, agent, whatsapp_client
     kb = ContextualAgnoKnowledge()
     agent = Agent(
         model=Gemini(id="gemini-2.5-flash"),
@@ -29,6 +31,7 @@ async def lifespan(app: FastAPI):
             DuckDuckGoTools(),
         ],
     )
+    whatsapp_client = WhatsAppClient()
     yield
     # Cleanup if needed
 
@@ -51,6 +54,35 @@ async def query(req: Query):
 
     response = agent.run(req.question)
     return {"response": response.content}
+
+
+@app.get("/webhook")
+async def verify_webhook(request: Request):
+    """Verify WhatsApp webhook."""
+    verify_token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+    
+    if verify_token == whatsapp_client.verify_token:
+        return int(challenge)
+    return {"error": "Invalid token"}, 403
+
+
+@app.post("/webhook")
+async def handle_webhook(request: Request):
+    """Handle incoming WhatsApp messages."""
+    data = await request.json()
+    parsed = whatsapp_client.parse_webhook(data)
+    
+    if not parsed:
+        return {"status": "ok"}
+    
+    phone = parsed["phone"]
+    message = parsed["message"]
+    
+    response = agent.run(message)
+    whatsapp_client.send_message(phone, response.content)
+    
+    return {"status": "ok"}
 
 
 @app.get("/health")
