@@ -2,7 +2,7 @@
 
 import argparse
 
-from src.storage.enhanced_agno_knowledge import EnhancedAgnoKnowledge
+from src.storage.contextual_agno_knowledge import ContextualAgnoKnowledge
 
 
 def main() -> None:
@@ -26,7 +26,7 @@ def main() -> None:
     print("   ✓ LLM contextual enhancement")
     print("   ✓ Hybrid search (vector + FTS)\n")
 
-    kb = EnhancedAgnoKnowledge()
+    kb = ContextualAgnoKnowledge()
 
     if args.file:
         kb.ingest_pdf(args.file)

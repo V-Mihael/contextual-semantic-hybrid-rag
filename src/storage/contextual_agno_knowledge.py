@@ -12,7 +12,7 @@ from src.config import settings
 from src.ingestion.contextual_semantic_chunking import ContextualSemanticChunking
 
 
-class EnhancedAgnoKnowledge:
+class ContextualAgnoKnowledge:
     """Knowledge base with context-enhanced semantic chunking.
 
     This class combines three advanced techniques for improved retrieval:

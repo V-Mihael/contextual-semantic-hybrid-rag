@@ -1,0 +1,78 @@
+IMPORTANTE: Você é um engenheiro DevOps sênior especializado em MLOps para aplicações RAG. Crie uma implementação COMPLETA e FUNCIONAL para deploy do projeto "contextual-rag-agno-supabase" para produção.
+
+CRIE 4 ARQUIVOS para DEPLOY Railway do meu RAG Agno+Supabase:
+
+1. **Dockerfile** (Poetry nativo, sem requirements.txt)
+FROM python:3.12-slim
+
+ENV POETRY_HOME=/opt/poetry
+POETRY_VIRTUALENVS_IN_PROJECT=true
+POETRY_NO_INTERACTION=1
+PYTHONUNBUFFERED=1
+
+RUN pip install poetry==1.8.3
+ENV PATH="$POETRY_HOME/bin:$PATH"
+
+WORKDIR /code
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --no-dev --no-root
+
+COPY src ./src
+COPY . .
+
+EXPOSE $PORT
+CMD ["poetry", "run", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "$PORT"]
+
+2. **src/api/main.py** (FastAPI simples)
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+from src.knowledge.agno_knowledge import AgnoKnowledge
+from src.config import settings
+
+app = FastAPI(title="RAG API")
+
+kb: AgnoKnowledge = None
+
+@app.on_event("startup")
+async def startup():
+global kb
+kb = AgnoKnowledge()
+
+class Query(BaseModel):
+question: str
+max_results: Optional[int] = 5
+
+@app.post("/query")
+async def query(req: Query):
+if not kb:
+raise HTTPException(503, "Loading...")
+return {"response": kb.research(req.question, max_results=req.max_results)}
+
+@app.get("/health")
+async def health():
+return {"status": "ok"}
+
+3. **railway.json**
+```json
+{
+  "build": {"builder": "DOCKERFILE"},
+  "deploy": {"startCommand": "poetry run uvicorn src.api.main:app --host 0.0.0.0 --port $PORT"}
+}
+.dockerignore
+
+text
+__pycache__
+data/
+notebooks/
+sql/
+.env
+.DS_Store
+Railway vars:
+GOOGLE_API_KEY=...
+SUPABASE_URL=...
+SUPABASE_ANON_KEY=...
+
+Teste: docker build -t rag . && docker run -p 8000:8000 -e GOOGLE_API_KEY=... rag
+
+ENTREGUE os 4 ARQUIVOS COMPLETOS AGORA!
