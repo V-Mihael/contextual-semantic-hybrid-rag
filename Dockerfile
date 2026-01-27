@@ -15,4 +15,4 @@ RUN poetry install --no-dev --no-root
 COPY src ./src
 
 EXPOSE 8000
-CMD poetry run uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD ["sh", "-c", "poetry run uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
