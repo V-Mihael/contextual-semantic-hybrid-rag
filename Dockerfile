@@ -13,6 +13,8 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev --no-root
 
 COPY src ./src
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8000
-CMD ["sh", "-c", "poetry run uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+ENTRYPOINT ["/entrypoint.sh"]
