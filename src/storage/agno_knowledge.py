@@ -24,7 +24,7 @@ class AgnoKnowledge:
         pdf_reader: PDF reader with semantic chunking strategy.
     """
 
-    def __init__(self, table_name: str = "documents") -> None:
+    def __init__(self, table_name: str = "economics_docs_gemini") -> None:
         """Initialize Agno Knowledge Base.
 
         Args:

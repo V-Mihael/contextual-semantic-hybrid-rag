@@ -86,4 +86,4 @@ Use Semantic for quick testing and good-enough results.
 
 Both approaches can coexist using different table names:
 - `documents_enhanced` - Enhanced contextual semantic
-- `documents` - Regular semantic
+- `economics_docs_gemini` - Regular semantic
