@@ -116,8 +116,6 @@ Or download sample PDFs:
 poetry run python scripts/shared/download_pdfs.py
 ```
 
-See [PDF_SOURCES.md](PDF_SOURCES.md) for free public domain books.
-
 ### Ingest PDFs
 
 **Agno (Fast):**
@@ -247,9 +245,7 @@ notebooks/
 - **[SETUP.md](SETUP.md)** - Complete setup guide
 - **[STRUCTURE.md](STRUCTURE.md)** - Project structure and architecture
 - **[AGNO_VS_LANGCHAIN.md](AGNO_VS_LANGCHAIN.md)** - Framework comparison
-- **[FRAMEWORK_INDEPENDENCE.md](FRAMEWORK_INDEPENDENCE.md)** - Why separate implementations
-- **[IMPLEMENTATION_COMPARISON.md](IMPLEMENTATION_COMPARISON.md)** - Approach comparison
-- **[PDF_SOURCES.md](PDF_SOURCES.md)** - Sample PDF sources
+- **[DEPLOY.md](DEPLOY.md)** - Deployment guide
 
 ## Requirements
 

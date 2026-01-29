@@ -44,11 +44,9 @@ contextual-semantic-hybrid-rag/
 └── docs/                             # Documentation
     ├── README.md
     ├── STRUCTURE.md
+    ├── SETUP.md
     ├── AGNO_VS_LANGCHAIN.md
-    ├── FRAMEWORK_INDEPENDENCE.md
-    ├── IMPLEMENTATION_COMPARISON.md
-    ├── PDF_SOURCES.md
-    └── SETUP.md
+    └── DEPLOY.md
 ```
 
 ## 🎯 Key Principles
@@ -56,36 +54,6 @@ contextual-semantic-hybrid-rag/
 **Framework Independence**: Each framework has its own implementation. No shared code that depends on specific frameworks.
 
 **Why?** Agno uses `agno.knowledge.document.Document`, LangChain uses `langchain_core.documents.Document`. Prefer duplication over wrong abstraction.
-
-### Architecture
-```
-┌─────────────────────────────────────┐
-│         Application Layer           │
-│  (API, Notebooks, Scripts)          │
-└─────────────┬───────────────────────┘
-              │
-      ┌───────┴───────┐
-      │               │
-┌─────▼─────┐   ┌────▼──────┐
-│   Agno    │   │ LangChain │
-│           │   │           │
-│ + chunking│   │+ chunking │
-│  (Agno    │   │(LangChain │
-│  classes) │   │ classes)  │
-└───────────┘   └───────────┘
-      │               │
-      └───────┬───────┘
-              │
-      ┌───────▼────────┐
-      │  Chonkie       │
-      │  (Semantic)    │
-      └────────────────┘
-              │
-      ┌───────▼────────┐
-      │  Google Gemini │
-      │  (Context)     │
-      └────────────────┘
-```
 
 ## 🚀 Usage
 
