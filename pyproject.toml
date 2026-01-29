@@ -24,7 +24,7 @@ tiktoken = "^0.8.0"
 fastapi = "^0.115.0"
 uvicorn = {extras = ["standard"], version = "^0.32.0"}
 yfinance = "^1.1.0"
-ddgs = "^9.10.0"
+tavily-python = "^0.5.0"
 whatsapp-python = "^4.3.0"
 
 [tool.poetry.group.dev.dependencies]

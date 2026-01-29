@@ -8,7 +8,7 @@ from agno.agent import Agent
 from agno.models.google import Gemini
 from src.storage.contextual_agno_knowledge import ContextualAgnoKnowledge
 from agno.tools.yfinance import YFinanceTools
-from agno.tools.duckduckgo import DuckDuckGoTools
+from agno.tools.tavily import TavilyTools
 from src.integrations.whatsapp import WhatsAppClient
 
 kb: Optional[ContextualAgnoKnowledge] = None
@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
         knowledge=kb.knowledge,
         search_knowledge=True,
         markdown=True,
-        tools=[YFinanceTools(), DuckDuckGoTools()],
+        tools=[YFinanceTools(), TavilyTools()],
     )
     whatsapp_client = WhatsAppClient()
     yield
