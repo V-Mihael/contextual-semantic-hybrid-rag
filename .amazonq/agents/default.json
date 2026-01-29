@@ -5,13 +5,13 @@
   "mcpServers": {
     "AgnoDocs": {
       "url": "https://docs.agno.com/mcp",
-      "disabled": false,
-      "timeout": 60000
+      "timeout": 60000,
+      "disabled": false
     },
     "docs-langchain": {
       "url": "https://docs.langchain.com/mcp",
-      "disabled": false,
-      "timeout": 60000
+      "timeout": 60000,
+      "disabled": false
     }
   },
   "tools": [
@@ -20,8 +20,8 @@
     "fs_write",
     "report_issue",
     "use_aws",
-    "@AgnoDocs",
-    "@docs-langchain"
+    "@docs-langchain",
+    "@AgnoDocs"
   ],
   "toolAliases": {},
   "allowedTools": [
@@ -29,7 +29,9 @@
     "report_issue",
     "use_aws",
     "execute_bash",
-    "fs_write"
+    "fs_write",
+    "@docs-langchain/SearchDocsByLangChain",
+    "@AgnoDocs/SearchAgno"
   ],
   "toolsSettings": {
     "use_aws": {
