@@ -1,0 +1,52 @@
+{
+  "name": "q_ide_default",
+  "description": "Default agent configuration",
+  "prompt": "",
+  "mcpServers": {
+    "AgnoDocs": {
+      "url": "https://docs.agno.com/mcp",
+      "disabled": false,
+      "timeout": 60000
+    },
+    "docs-langchain": {
+      "url": "https://docs.langchain.com/mcp",
+      "disabled": false,
+      "timeout": 60000
+    }
+  },
+  "tools": [
+    "fs_read",
+    "execute_bash",
+    "fs_write",
+    "report_issue",
+    "use_aws",
+    "@AgnoDocs",
+    "@docs-langchain"
+  ],
+  "toolAliases": {},
+  "allowedTools": [
+    "fs_read",
+    "report_issue",
+    "use_aws",
+    "execute_bash",
+    "fs_write"
+  ],
+  "toolsSettings": {
+    "use_aws": {
+      "preset": "readOnly"
+    },
+    "execute_bash": {
+      "preset": "readOnly"
+    }
+  },
+  "resources": [
+    "file://AmazonQ.md",
+    "file://README.md",
+    "file://.amazonq/rules/**/*.md"
+  ],
+  "hooks": {
+    "agentSpawn": [],
+    "userPromptSubmit": []
+  },
+  "useLegacyMcpJson": true
+}
