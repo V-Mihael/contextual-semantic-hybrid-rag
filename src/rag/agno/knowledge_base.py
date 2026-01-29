@@ -12,7 +12,7 @@ from chonkie.embeddings import OpenAIEmbeddings
 from src.config import settings
 
 
-class AgnoKnowledge:
+class AgnoKnowledgeBase:
     """Wrapper for Agno Knowledge with semantic chunking and hybrid search.
 
     This class provides a simplified interface for PDF ingestion and retrieval
@@ -24,7 +24,7 @@ class AgnoKnowledge:
         pdf_reader: PDF reader with semantic chunking strategy.
     """
 
-    def __init__(self, table_name: str = "economics_docs_gemini") -> None:
+    def __init__(self, table_name: str = "economics_docs_agno") -> None:
         """Initialize Agno Knowledge Base.
 
         Args:

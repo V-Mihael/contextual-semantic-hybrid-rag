@@ -6,12 +6,12 @@ from pydantic import BaseModel
 from typing import Optional
 from agno.agent import Agent
 from agno.models.google import Gemini
-from src.storage.contextual_agno_knowledge import ContextualAgnoKnowledge
+from src.rag.agno import ContextualAgnoKnowledgeBase
 from agno.tools.yfinance import YFinanceTools
 from agno.tools.tavily import TavilyTools
 from src.integrations.whatsapp import WhatsAppClient
 
-kb: Optional[ContextualAgnoKnowledge] = None
+kb: Optional[ContextualAgnoKnowledgeBase] = None
 agent: Optional[Agent] = None
 whatsapp_client: Optional[WhatsAppClient] = None
 
@@ -20,7 +20,7 @@ whatsapp_client: Optional[WhatsAppClient] = None
 async def lifespan(app: FastAPI):
     """Initialize resources on startup and cleanup on shutdown."""
     global kb, agent, whatsapp_client
-    kb = ContextualAgnoKnowledge()
+    kb = ContextualAgnoKnowledgeBase()
     agent = Agent(
         model=Gemini(id="gemini-2.5-flash"),
         knowledge=kb.knowledge,

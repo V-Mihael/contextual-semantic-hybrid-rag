@@ -19,11 +19,12 @@ cp .env.example .env
 # Run: CREATE EXTENSION IF NOT EXISTS vector;
 
 # 4. Download sample PDFs (optional)
-poetry run python scripts/download_pdfs.py
+poetry run python scripts/shared/download_pdfs.py
 
 # 5. Ingest your PDFs (choose one)
-poetry run python scripts/ingest_pdfs_agno.py --directory data/pdfs          # Fast
-poetry run python scripts/ingest_pdfs_enhanced.py --directory data/pdfs     # Best
+poetry run python scripts/agno/ingest_semantic.py --directory data/pdfs          # Fast
+poetry run python scripts/agno/ingest_contextual.py --directory data/pdfs       # Best
+poetry run python scripts/langchain/ingest.py --directory data/pdfs             # LangChain
 
 # 6. Query with notebooks
 poetry run jupyter lab
@@ -54,7 +55,23 @@ PDF → SemanticChunking → LLM Context Headers → Hybrid Embeddings (BM25 + V
 
 ## Features
 
-### Two Approaches Available
+### Two Framework Options
+
+**🔵 Agno (Recommended for Quick Start)**
+- Native PDF reading and agent framework
+- Built-in hybrid search
+- ~10 lines of code
+- Best for prototyping
+
+**🟢 LangChain (Maximum Flexibility)**
+- Standard LangChain ecosystem
+- Compatible with LangChain chains
+- Extensive community integrations
+- Best for complex workflows
+
+**See [AGNO_VS_LANGCHAIN.md](AGNO_VS_LANGCHAIN.md) for detailed comparison**
+
+### Two Chunking Approaches
 
 **1. Semantic Chunking (Fast)**
 - Natural boundary detection using embeddings
@@ -70,7 +87,7 @@ PDF → SemanticChunking → LLM Context Headers → Hybrid Embeddings (BM25 + V
 
 ### Core Features
 
-- **Agno Framework**: Native PDF reading, chunking, and vector storage
+- **Agno & LangChain**: Choose your preferred framework
 - **PgVector**: Postgres extension for vector similarity search
 - **Hybrid Search**: Combines semantic + keyword search with RRF
 - **Gemini Integration**: Embeddings (text-embedding-004) + LLM (gemini-2.5-flash)
@@ -96,21 +113,26 @@ cp /path/to/your/*.pdf data/pdfs/
 
 Or download sample PDFs:
 ```bash
-poetry run python scripts/download_pdfs.py
+poetry run python scripts/shared/download_pdfs.py
 ```
 
 See [PDF_SOURCES.md](PDF_SOURCES.md) for free public domain books.
 
 ### Ingest PDFs
 
-**Fast (Semantic Chunking):**
+**Agno (Fast):**
 ```bash
-poetry run python scripts/ingest_pdfs_agno.py --directory data/pdfs
+poetry run python scripts/agno/ingest_semantic.py --directory data/pdfs
 ```
 
-**Best Accuracy (Enhanced Contextual):**
+**Agno (Best Accuracy):**
 ```bash
-poetry run python scripts/ingest_pdfs_enhanced.py --directory data/pdfs
+poetry run python scripts/agno/ingest_contextual.py --directory data/pdfs
+```
+
+**LangChain:**
+```bash
+poetry run python scripts/langchain/ingest.py --directory data/pdfs
 ```
 
 ### Query with Agent
@@ -118,9 +140,9 @@ poetry run python scripts/ingest_pdfs_enhanced.py --directory data/pdfs
 ```python
 from agno.agent import Agent
 from agno.models.google import Gemini
-from src.storage.agno_knowledge import AgnoKnowledge
+from src.rag.agno import AgnoKnowledgeBase
 
-kb = AgnoKnowledge()
+kb = AgnoKnowledgeBase()
 
 agent = Agent(
     model=Gemini(id="gemini-2.5-flash"),
@@ -140,8 +162,9 @@ agent.print_response(
 poetry run jupyter lab
 ```
 
-- `notebooks/01_agno_semantic.ipynb` - Fast semantic chunking demo
-- `notebooks/02_enhanced_contextual.ipynb` - Enhanced contextual demo
+- `notebooks/agno/01_semantic_chunking.ipynb` - Fast semantic chunking (Agno)
+- `notebooks/agno/02_contextual_chunking.ipynb` - Enhanced contextual (Agno)
+- `notebooks/langchain/01_contextual_chunking.ipynb` - LangChain implementation
 
 ## Why This Approach?
 
@@ -188,26 +211,43 @@ Long documents (128k+ tokens) are handled efficiently:
 
 ```
 src/
-├── ingestion/
-│   └── contextual_semantic_chunking.py  # Custom chunking strategy
-├── storage/
-│   ├── agno_knowledge.py                # Fast semantic approach
-│   └── enhanced_agno_knowledge.py       # Enhanced contextual approach
-└── config.py                            # Settings
+├── rag/
+│   ├── agno/
+│   │   ├── knowledge_base.py                # Fast semantic (Agno)
+│   │   ├── contextual_knowledge_base.py     # Enhanced contextual (Agno)
+│   │   └── chunking.py                      # Agno-specific chunking
+│   └── langchain/
+│       ├── contextual_knowledge_base.py     # Contextual semantic (LangChain)
+│       └── chunking.py                      # LangChain-specific chunking
+├── api/
+│   └── main.py                              # FastAPI application
+├── integrations/
+│   └── whatsapp.py                          # WhatsApp integration
+└── config.py                                # Settings
 
 scripts/
-├── download_pdfs.py                     # Sample PDF downloader
-├── ingest_pdfs_agno.py                  # Fast ingestion
-└── ingest_pdfs_enhanced.py              # Enhanced ingestion
+├── agno/
+│   ├── ingest_semantic.py                   # Fast ingestion (Agno)
+│   └── ingest_contextual.py                 # Enhanced ingestion (Agno)
+├── langchain/
+│   └── ingest.py                            # LangChain ingestion
+└── shared/
+    └── download_pdfs.py                     # Sample PDF downloader
 
 notebooks/
-├── 01_agno_semantic.ipynb               # Quick demo
-└── 02_enhanced_contextual.ipynb         # Advanced demo
+├── agno/
+│   ├── 01_semantic_chunking.ipynb           # Quick demo (Agno)
+│   └── 02_contextual_chunking.ipynb         # Advanced demo (Agno)
+└── langchain/
+    └── 01_contextual_chunking.ipynb         # LangChain demo
 ```
 
 ## Documentation
 
 - **[SETUP.md](SETUP.md)** - Complete setup guide
+- **[STRUCTURE.md](STRUCTURE.md)** - Project structure and architecture
+- **[AGNO_VS_LANGCHAIN.md](AGNO_VS_LANGCHAIN.md)** - Framework comparison
+- **[FRAMEWORK_INDEPENDENCE.md](FRAMEWORK_INDEPENDENCE.md)** - Why separate implementations
 - **[IMPLEMENTATION_COMPARISON.md](IMPLEMENTATION_COMPARISON.md)** - Approach comparison
 - **[PDF_SOURCES.md](PDF_SOURCES.md)** - Sample PDF sources
 

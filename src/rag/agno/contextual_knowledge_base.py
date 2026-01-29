@@ -9,10 +9,10 @@ from agno.vectordb.pgvector import PgVector, SearchType
 from chonkie.embeddings import OpenAIEmbeddings
 
 from src.config import settings
-from src.ingestion.contextual_semantic_chunking import ContextualSemanticChunking
+from src.rag.agno.chunking import ContextualSemanticChunking
 
 
-class ContextualAgnoKnowledge:
+class ContextualAgnoKnowledgeBase:
     """Knowledge base with context-enhanced semantic chunking.
 
     This class combines three advanced techniques for improved retrieval:
@@ -26,7 +26,7 @@ class ContextualAgnoKnowledge:
         pdf_reader: PDF reader with contextual semantic chunking strategy.
     """
 
-    def __init__(self, table_name: str = "economics_enhanced_gemini") -> None:
+    def __init__(self, table_name: str = "economics_enhanced_agno") -> None:
         """Initialize Enhanced Knowledge Base.
 
         Args:
