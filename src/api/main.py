@@ -10,6 +10,7 @@ from src.rag.agno import ContextualAgnoKnowledgeBase
 from agno.tools.yfinance import YFinanceTools
 from agno.tools.tavily import TavilyTools
 from src.integrations.whatsapp import WhatsAppClient
+from src.config import settings
 
 kb: Optional[ContextualAgnoKnowledgeBase] = None
 agent: Optional[Agent] = None
@@ -21,12 +22,17 @@ async def lifespan(app: FastAPI):
     """Initialize resources on startup and cleanup on shutdown."""
     global kb, agent, whatsapp_client
     kb = ContextualAgnoKnowledgeBase()
+    
+    tools = [YFinanceTools()]
+    if settings.tavily_api_key:
+        tools.append(TavilyTools(api_key=settings.tavily_api_key))
+    
     agent = Agent(
-        model=Gemini(id="gemini-2.5-flash"),
+        model=Gemini(id="gemini-2.5-flash", api_key=settings.google_api_key),
         knowledge=kb.knowledge,
         search_knowledge=True,
         markdown=True,
-        tools=[YFinanceTools(), TavilyTools()],
+        tools=tools,
     )
     whatsapp_client = WhatsAppClient()
     yield
@@ -50,7 +56,10 @@ async def query(req: Query):
         raise HTTPException(status_code=503, detail="Agent loading...")
 
     response = agent.run(req.question)
-    return {"response": response.content}
+    return {
+        "response": response.content,
+        "tools_used": [m.tool_name for m in response.messages if hasattr(m, 'tool_name')]
+    }
 
 
 @app.get("/webhook")

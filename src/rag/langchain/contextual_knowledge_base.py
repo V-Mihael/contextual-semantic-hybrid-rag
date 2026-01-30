@@ -9,7 +9,6 @@ from langchain_core.documents import Document
 
 from src.config import settings
 from src.rag.langchain.chunking import LangChainContextualChunker
-from chonkie.embeddings import OpenAIEmbeddings
 
 
 class ContextualLangChainKnowledgeBase:
@@ -38,7 +37,7 @@ class ContextualLangChainKnowledgeBase:
         )
 
         self.chunker = LangChainContextualChunker(
-            embedder=OpenAIEmbeddings(model="text-embedding-3-small"),
+            embedder=self.embeddings,
             chunk_size=settings.chunk_size,
             similarity_threshold=0.5,
         )

@@ -7,7 +7,6 @@ from agno.knowledge.embedder.google import GeminiEmbedder
 from agno.knowledge.knowledge import Knowledge
 from agno.knowledge.reader.pdf_reader import PDFReader
 from agno.vectordb.pgvector import PgVector, SearchType
-from chonkie.embeddings import OpenAIEmbeddings
 
 from src.config import settings
 
@@ -47,7 +46,7 @@ class AgnoKnowledgeBase:
 
         self.pdf_reader = PDFReader(
             chunking_strategy=SemanticChunking(
-                embedder=OpenAIEmbeddings(model="text-embedding-3-small"),
+                embedder=self.embedder,
                 chunk_size=settings.chunk_size,
                 similarity_threshold=0.5,
             )
