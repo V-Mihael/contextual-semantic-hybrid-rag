@@ -74,6 +74,11 @@ class TelegramBot:
             logger.error(f"Error processing message | user={user_name} error={str(e)}")
             await update.message.reply_text("Desculpe, ocorreu um erro. Tente novamente.")
 
+    async def set_webhook(self, url: str):
+        """Set webhook URL for the bot."""
+        await self.app.bot.set_webhook(url)
+        logger.info(f"Webhook set to {url}")
+
     def run(self):
         """Start the bot with polling."""
         logger.info("Telegram bot started")

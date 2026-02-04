@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     google_api_key: str
     tavily_api_key: Optional[str] = None
     telegram_bot_token: Optional[str] = None
+    render_external_url: Optional[str] = None
     db_url: str
     embedding_model: str = "models/text-embedding-004"
     llm_model: str = "gemini-2.5-flash"

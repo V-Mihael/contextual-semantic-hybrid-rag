@@ -1,9 +1,4 @@
-"""Run Telegram bot."""
-
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
+"""Telegram bot polling runner for local development."""
 
 from src.logger import logger
 from src.config import settings
@@ -11,9 +6,9 @@ from src.agents import create_rag_agent
 from src.integrations.telegram import TelegramBot
 
 
-def main():
-    """Initialize and run Telegram bot."""
-    logger.info("Starting Telegram bot initialization")
+def run_polling():
+    """Initialize and run Telegram bot in polling mode (for local development)."""
+    logger.info("Starting Telegram bot initialization (polling mode)")
     
     agent = create_rag_agent()
     logger.info("Agent initialized with persistent database")
@@ -31,4 +26,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_polling()

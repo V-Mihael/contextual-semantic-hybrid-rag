@@ -220,7 +220,9 @@ src/
 ├── api/
 │   └── main.py                              # FastAPI application
 ├── integrations/
-│   └── whatsapp.py                          # WhatsApp integration
+│   └── telegram/
+│       ├── bot.py                           # Telegram bot class
+│       └── polling.py                       # Polling runner (local dev)
 └── config.py                                # Settings
 
 scripts/

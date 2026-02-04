@@ -114,7 +114,8 @@ git push
 
 **Telegram bot not responding:**
 - Verify TELEGRAM_BOT_TOKEN is correct
-- Check logs: `poetry run python scripts/telegram_bot.py`
+- Check logs in Render dashboard
+- For local testing: `poetry run python -m src.integrations.telegram.polling`
 
 **Error: Connection refused**
 - Verify DB_URL is correct
