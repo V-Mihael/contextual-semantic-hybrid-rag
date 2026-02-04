@@ -28,7 +28,7 @@ fastapi = "^0.115.0"
 uvicorn = {extras = ["standard"], version = "^0.32.0"}
 yfinance = "^1.1.0"
 tavily-python = "^0.7.0"
-whatsapp-python = "^4.3.0"
+python-telegram-bot = "^22.6"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.1.1"
