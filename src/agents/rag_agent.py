@@ -25,7 +25,7 @@ def _load_instructions() -> str:
 
 def create_rag_agent(
     table_name: str = "economics_enhanced_gemini",
-    num_history_runs: int = 10,
+    num_history_runs: int = 5,
     instructions: str = "",
 ) -> Agent:
     """Create a RAG agent with knowledge base and tools.
@@ -62,6 +62,10 @@ def create_rag_agent(
         markdown=True,
         add_history_to_context=True,
         num_history_runs=num_history_runs,
+        update_memory_on_run=True,
+        read_chat_history=True,
+        read_tool_call_history=True,
+        compress_tool_results=True,
         db=db,
         tools=tools,
     )
