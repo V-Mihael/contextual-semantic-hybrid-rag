@@ -48,7 +48,6 @@ class ContextualAgnoKnowledgeBase:
 
         self.pdf_reader = PDFReader(
             chunking_strategy=ContextualSemanticChunking(
-                embedder=self.embedder,
                 chunk_size=settings.chunk_size,
                 similarity_threshold=0.5,
             )

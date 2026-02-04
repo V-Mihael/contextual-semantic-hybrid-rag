@@ -55,7 +55,7 @@ def create_rag_agent(
     
     # Agent
     agent = Agent(
-        model=Gemini(id="gemini-2.5-flash", api_key=settings.google_api_key),
+        model=Gemini(id=settings.llm_model, api_key=settings.google_api_key),
         instructions=instructions,
         knowledge=kb.knowledge,
         search_knowledge=True,

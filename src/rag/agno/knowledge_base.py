@@ -2,13 +2,13 @@
 
 from typing import Any
 
-from agno.knowledge.chunking.semantic import SemanticChunking
 from agno.knowledge.embedder.google import GeminiEmbedder
 from agno.knowledge.knowledge import Knowledge
 from agno.knowledge.reader.pdf_reader import PDFReader
 from agno.vectordb.pgvector import PgVector, SearchType
 
 from src.config import settings
+from src.rag.agno.simple_chunking import SimpleSemanticChunking
 
 
 class AgnoKnowledgeBase:
@@ -45,8 +45,7 @@ class AgnoKnowledgeBase:
         )
 
         self.pdf_reader = PDFReader(
-            chunking_strategy=SemanticChunking(
-                embedder=self.embedder,
+            chunking_strategy=SimpleSemanticChunking(
                 chunk_size=settings.chunk_size,
                 similarity_threshold=0.5,
             )

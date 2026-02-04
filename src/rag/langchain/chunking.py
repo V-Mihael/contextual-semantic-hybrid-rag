@@ -52,7 +52,7 @@ Context:"""
         )
 
         self.client = genai.Client(api_key=settings.google_api_key)
-        self.model_id = settings.chunking_model
+        self.model_id = settings.semantic_chunking_model
         self.max_retries = max_retries
         self.retry_delay = retry_delay
 
