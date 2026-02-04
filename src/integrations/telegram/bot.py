@@ -45,7 +45,7 @@ class TelegramBot:
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command."""
         await update.message.reply_text(
-            "Hello! I'm *Spets*, a RAG assistant with economics knowledge and web search powers! Send me your questions and I'll answer using my base knowledge and the internet, if needed.\n\n🎤 You can also send voice messages!"
+            "Hello! I'm *Spets*, a RAG assistant with economics and habits knowledge, and also web search powers! Send me your questions and I'll answer using my base knowledge and the internet, if needed.\n\n🎤 You can also send voice messages!"
         )
 
     async def _process_audio_async(self, update: Update, audio_file, format: str, user_name: str, user_id: str):
