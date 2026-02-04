@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     Attributes:
         google_api_key: Google AI Studio API key for Gemini models.
         tavily_api_key: Tavily API key for web search.
+        groq_api_key: Groq API key for Whisper transcription (free tier).
         db_url: PostgreSQL connection string with pgvector support.
         embedding_model: Gemini embedding model identifier.
         llm_model: Gemini LLM model identifier for agent responses.
@@ -22,6 +23,7 @@ class Settings(BaseSettings):
     google_api_key: str
     tavily_api_key: Optional[str] = None
     telegram_bot_token: Optional[str] = None
+    groq_api_key: Optional[str] = None
     render_external_url: Optional[str] = None
     db_url: str
     embedding_model: str = "models/text-embedding-004"
