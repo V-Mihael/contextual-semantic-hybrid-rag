@@ -1,6 +1,7 @@
 """Telegram bot integration."""
 
 import time
+import asyncio
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -47,35 +48,26 @@ class TelegramBot:
             "Hello! I'm *Spets*, a RAG assistant with economics knowledge and web search powers! Send me your questions and I'll answer using my base knowledge and the internet, if needed.\n\n🎤 You can also send voice messages!"
         )
 
-    async def handle_audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle voice and audio messages."""
+    async def _process_audio_async(self, update: Update, audio_file, format: str, user_name: str, user_id: str):
+        """Process audio asynchronously to avoid webhook timeout."""
         start_time = time.time()
-        user_name = update.message.from_user.first_name
-        user_id = str(update.message.from_user.id)
-        
-        logger.info(f"Audio received | user={user_name} user_id={user_id}")
         
         try:
-            # Send processing message
-            await update.message.reply_text("🎤 Processing your audio. Please wait a moment...")
-            
-            # Show typing indicator
-            await update.message.chat.send_action("typing")
-            
-            # Get audio file
-            if update.message.voice:
-                audio_file = await update.message.voice.get_file()
-                format = "ogg"
-            else:
-                audio_file = await update.message.audio.get_file()
-                format = "mp3"
-            
             # Download audio
             audio_bytes = await audio_file.download_as_bytearray()
             
-            # Transcribe
-            transcription = self.transcriber.transcribe(bytes(audio_bytes), format=format)
+            # Transcribe (runs in thread pool to not block)
+            loop = asyncio.get_event_loop()
+            transcription = await loop.run_in_executor(
+                None, 
+                self.transcriber.transcribe, 
+                bytes(audio_bytes), 
+                format
+            )
             logger.info(f"Audio transcribed | user={user_name} text={transcription[:100]}")
+            
+            # Show typing while processing
+            await update.message.chat.send_action("typing")
             
             # Process as text message
             user_context = f"[User_name: {user_name} (ID: {user_id})]\n[Transcribed from audio]"
@@ -98,6 +90,27 @@ class TelegramBot:
         except Exception as e:
             logger.error(f"Error processing audio | user={user_name} error={str(e)}")
             await update.message.reply_text("Desculpe, ocorreu um erro ao processar o áudio. Tente novamente.")
+
+    async def handle_audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle voice and audio messages."""
+        user_name = update.message.from_user.first_name
+        user_id = str(update.message.from_user.id)
+        
+        logger.info(f"Audio received | user={user_name} user_id={user_id}")
+        
+        # Send immediate response
+        await update.message.reply_text("🎤 Processing your audio. Please wait a moment...")
+        
+        # Get audio file info
+        if update.message.voice:
+            audio_file = await update.message.voice.get_file()
+            format = "ogg"
+        else:
+            audio_file = await update.message.audio.get_file()
+            format = "mp3"
+        
+        # Process asynchronously (don't await to return quickly to Telegram)
+        asyncio.create_task(self._process_audio_async(update, audio_file, format, user_name, user_id))
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming messages."""
