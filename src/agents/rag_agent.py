@@ -1,5 +1,6 @@
 """Agent factory for creating configured agents."""
 
+from pathlib import Path
 from agno.agent import Agent
 from agno.models.google import Gemini
 from agno.tools.yfinance import YFinanceTools
@@ -10,19 +11,33 @@ from src.config import settings
 from src.rag.agno import ContextualAgnoKnowledgeBase
 
 
+def _load_instructions() -> str:
+    """Load agent instructions from file."""
+    instructions_file = Path(__file__).parent.parent.parent / "AGENT_INSTRUCTIONS.md"
+    if instructions_file.exists():
+        return instructions_file.read_text()
+    return "You are a helpful AI assistant."
+
+
 def create_rag_agent(
     table_name: str = "economics_enhanced_gemini",
     num_history_runs: int = 10,
+    instructions: str = "",
 ) -> Agent:
     """Create a RAG agent with knowledge base and tools.
     
     Args:
         table_name: Knowledge base table name.
         num_history_runs: Number of history runs to include in context.
+        instructions: Agent personality and rules (system prompt).
         
     Returns:
         Configured Agent instance.
     """
+    # Default instructions
+    if not instructions:
+        instructions = _load_instructions()
+    
     # Knowledge base
     kb = ContextualAgnoKnowledgeBase(table_name=table_name)
     
@@ -37,6 +52,7 @@ def create_rag_agent(
     # Agent
     agent = Agent(
         model=Gemini(id="gemini-2.5-flash", api_key=settings.google_api_key),
+        instructions=instructions,
         knowledge=kb.knowledge,
         search_knowledge=True,
         markdown=True,

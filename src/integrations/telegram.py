@@ -34,7 +34,7 @@ class TelegramBot:
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command."""
         await update.message.reply_text(
-            "Hello! I'm a RAG assistant. Send me your questions and I'll answer using my base knowledge. I know some economics books and i can search on the internet."
+            "Hello! I'm *Spets*, a RAG assistant with economics knowledge and web search powers! Send me your questions and I'll answer using my base knowledge and the internet, if needed."
         )
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -65,7 +65,10 @@ class TelegramBot:
             )
             
             # Send response
-            await update.message.reply_text(response.content)
+            await update.message.reply_text(
+                response.content,
+                parse_mode="Markdown"
+            )
             
         except Exception as e:
             logger.error(f"Error processing message | user={user_name} error={str(e)}")

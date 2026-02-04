@@ -14,6 +14,7 @@ RUN poetry install --no-dev --no-root
 
 COPY src ./src
 COPY scripts ./scripts
+COPY AGENT_INSTRUCTIONS.md ./AGENT_INSTRUCTIONS.md
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
