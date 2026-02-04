@@ -36,6 +36,11 @@ class TelegramBot:
             MessageHandler(filters.VOICE | filters.AUDIO, self.handle_audio)
         )
 
+    async def initialize(self):
+        """Initialize the application for webhook mode."""
+        await self.app.initialize()
+        logger.info("Telegram Application initialized for webhook mode")
+
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command."""
         await update.message.reply_text(
@@ -51,6 +56,9 @@ class TelegramBot:
         logger.info(f"Audio received | user={user_name} user_id={user_id}")
         
         try:
+            # Send processing message
+            await update.message.reply_text("🎤 Processing your audio. Please wait a moment...")
+            
             # Show typing indicator
             await update.message.chat.send_action("typing")
             

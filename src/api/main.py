@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI):
     if telegram_token and render_url:
         try:
             telegram_bot = TelegramBot(token=telegram_token, agent=agent)
+            await telegram_bot.initialize()  # Initialize for webhook mode
             webhook_url = f"{render_url}/telegram"
             await telegram_bot.set_webhook(webhook_url)
             logger.info(f"Telegram webhook mode enabled: {webhook_url}")
