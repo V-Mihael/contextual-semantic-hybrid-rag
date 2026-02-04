@@ -5,6 +5,7 @@ from typing import Any
 from agno.knowledge.embedder.google import GeminiEmbedder
 from agno.knowledge.knowledge import Knowledge
 from agno.knowledge.reader.pdf_reader import PDFReader
+from agno.knowledge.reader.text_reader import TextReader
 from agno.vectordb.pgvector import PgVector, SearchType
 
 from src.config import settings
@@ -23,6 +24,7 @@ class ContextualAgnoKnowledgeBase:
         embedder: Gemini embedder for vector representations.
         knowledge: Agno Knowledge instance with PgVector backend.
         pdf_reader: PDF reader with contextual semantic chunking strategy.
+        text_reader: Text reader with contextual semantic chunking strategy.
     """
 
     def __init__(self, table_name: str = "economics_enhanced_gemini") -> None:
@@ -53,6 +55,13 @@ class ContextualAgnoKnowledgeBase:
             )
         )
 
+        self.text_reader = TextReader(
+            chunking_strategy=ContextualSemanticChunking(
+                chunk_size=settings.chunk_size,
+                similarity_threshold=0.5,
+            )
+        )
+
     def ingest_pdf(self, path: str) -> None:
         """Ingest PDF with contextual semantic chunking.
 
@@ -61,6 +70,15 @@ class ContextualAgnoKnowledgeBase:
         """
         print(f"📄 Ingesting with context-enhanced semantic chunking: {path}")
         self.knowledge.insert(path=path, reader=self.pdf_reader)
+
+    def ingest_text(self, path: str) -> None:
+        """Ingest text file with contextual semantic chunking.
+
+        Args:
+            path: Path to the text file.
+        """
+        print(f"📄 Ingesting text with context-enhanced semantic chunking: {path}")
+        self.knowledge.insert(path=path, reader=self.text_reader)
 
     def ingest_directory(self, path: str) -> None:
         """Ingest directory with contextual semantic chunking.
