@@ -1,2 +1,8 @@
 #!/bin/sh
+set -e
+
+# Start Telegram bot in background
+poetry run python scripts/telegram_bot.py &
+
+# Start API in foreground
 exec poetry run uvicorn src.api.main:app --host 0.0.0.0 --port "${PORT:-8000}"

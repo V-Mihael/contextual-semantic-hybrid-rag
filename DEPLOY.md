@@ -1,10 +1,11 @@
-# 🚀 Deploy Guide - Railway
+# 🚀 Deploy Guide
 
 ## Prerequisites
 
-1. **Railway Account**: [railway.app](https://railway.app)
+1. **Render Account**: [render.com](https://render.com) (or Railway)
 2. **Google API Key**: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-3. **Supabase Database**: Create project and enable pgvector
+3. **Telegram Bot Token**: Get from @BotFather on Telegram
+4. **Supabase Database**: Create project and enable pgvector
 
 ## Supabase Setup
 
@@ -13,17 +14,26 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
-## Railway Deployment
+## Render Deployment
 
-### 1. Connect Repository
-- New Project → Deploy from GitHub repo
-- Select: `contextual-rag-agno-supabase`
+### 1. Create Web Service
+- New → Web Service
+- Connect GitHub repository
+- Select: `contextual-semantic-hybrid-rag`
 
-### 2. Configure Environment Variables
-In Railway dashboard, **Variables** tab:
+### 2. Configure Service
+- **Name**: rag-telegram-bot
+- **Environment**: Docker
+- **Region**: Choose closest to you
+- **Instance Type**: Free (or Starter for production)
+
+### 3. Environment Variables
+In Render dashboard, **Environment** tab:
 
 ```bash
 GOOGLE_API_KEY=your_google_api_key_here
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TAVILY_API_KEY=your_tavily_api_key
 DB_URL=postgresql+psycopg://postgres:[PASSWORD]@[HOST]:5432/postgres
 ```
 
@@ -31,9 +41,22 @@ DB_URL=postgresql+psycopg://postgres:[PASSWORD]@[HOST]:5432/postgres
 - Dashboard → Settings → Database → Connection String (URI)
 - Replace `postgresql://` with `postgresql+psycopg://`
 
-### 3. Automatic Deploy
-- Railway detects `Dockerfile` and builds automatically
+### 4. Deploy
+- Click **Create Web Service**
+- Render detects `Dockerfile` and builds automatically
 - Each GitHub push triggers new deployment
+
+### 5. Test
+- API: `https://your-app.onrender.com/health`
+- Telegram: Send message to your bot
+
+## Alternative: Railway Deployment
+
+Same steps as Render:
+1. New Project → Deploy from GitHub
+2. Add environment variables
+3. Railway auto-detects Dockerfile
+4. Deploy!
 
 ## Local Testing
 
@@ -55,16 +78,16 @@ curl http://localhost:8000/health
 
 ### Health Check
 ```bash
-curl https://your-app.railway.app/health
+curl https://your-app.onrender.com/health
 ```
 
 ### Query
 ```bash
-curl -X POST https://your-app.railway.app/query \
+curl -X POST https://your-app.onrender.com/query \
   -H "Content-Type: application/json" \
   -d '{
     "question": "What is semantic chunking?",
-    "max_results": 5
+    "session_id": "user123"
   }'
 ```
 
@@ -85,9 +108,13 @@ git push
 
 ## Troubleshooting
 
-**Error: "Knowledge base loading..."**
+**Error: "Agent loading..."**
 - Wait for complete initialization (~30s)
-- Check Railway logs
+- Check Render logs
+
+**Telegram bot not responding:**
+- Verify TELEGRAM_BOT_TOKEN is correct
+- Check logs: `poetry run python scripts/telegram_bot.py`
 
 **Error: Connection refused**
 - Verify DB_URL is correct

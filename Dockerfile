@@ -13,8 +13,12 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev --no-root
 
 COPY src ./src
+COPY scripts ./scripts
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# Create logs directory
+RUN mkdir -p /code/logs
 
 EXPOSE 8000
 ENTRYPOINT ["/entrypoint.sh"]

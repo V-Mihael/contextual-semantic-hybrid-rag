@@ -1,5 +1,6 @@
 """Telegram bot integration."""
 
+import time
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -8,6 +9,7 @@ from telegram.ext import (
     filters,
     ContextTypes,
 )
+from loguru import logger
 
 
 class TelegramBot:
@@ -37,20 +39,39 @@ class TelegramBot:
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming messages."""
+        start_time = time.time()
         user_message = update.message.text
-        print(f"📩 Pergunta: {user_message}")
+        user_name = update.message.from_user.first_name
+        user_id = str(update.message.from_user.id)
+        
+        logger.info(f"Message received | user={user_name} user_id={user_id} message={user_message[:100]}")
 
         # Show typing indicator
         await update.message.chat.send_action("typing")
 
-        # Get response from agent
-        response = self.agent.run(user_message)
-        print(f"✅ Resposta gerada ({len(response.content)} chars)")
-
-        # Send response
-        await update.message.reply_text(response.content)
+        # Get response from agent with user session
+        try:
+            # Add user info to message context
+            user_context = f"[User_name: {user_name} (ID: {user_id})]"
+            message_with_context = f"{user_context}\n{user_message}"
+            
+            response = self.agent.run(message_with_context, session_id=user_id)
+            tools_used = [m.tool_name for m in response.messages if hasattr(m, 'tool_name')]
+            duration = time.time() - start_time
+            
+            logger.info(
+                f"Response generated | user={user_name} session={user_id} duration={duration:.2f}s "
+                f"response_length={len(response.content)} tools={tools_used}"
+            )
+            
+            # Send response
+            await update.message.reply_text(response.content)
+            
+        except Exception as e:
+            logger.error(f"Error processing message | user={user_name} error={str(e)}")
+            await update.message.reply_text("Desculpe, ocorreu um erro. Tente novamente.")
 
     def run(self):
         """Start the bot with polling."""
-        print("🤖 Telegram bot iniciado!")
+        logger.info("Telegram bot started")
         self.app.run_polling(allowed_updates=Update.ALL_TYPES)

@@ -20,7 +20,7 @@ def main():
     parser.add_argument(
         "--table",
         type=str,
-        default="economics_enhanced_agno",
+        default="economics_enhanced_gemini",
         help="Table name for the vectorstore",
     )
     args = parser.parse_args()

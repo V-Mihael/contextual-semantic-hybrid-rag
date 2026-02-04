@@ -9,3 +9,7 @@ build/
 .pytest_cache/
 .ipynb_checkpoints/
 *.pdf
+
+# Logs
+logs/
+*.log

@@ -25,7 +25,7 @@ class ContextualAgnoKnowledgeBase:
         pdf_reader: PDF reader with contextual semantic chunking strategy.
     """
 
-    def __init__(self, table_name: str = "economics_enhanced_agno") -> None:
+    def __init__(self, table_name: str = "economics_enhanced_gemini") -> None:
         """Initialize Enhanced Knowledge Base.
 
         Args:

@@ -29,6 +29,10 @@ uvicorn = {extras = ["standard"], version = "^0.32.0"}
 yfinance = "^1.1.0"
 tavily-python = "^0.7.0"
 python-telegram-bot = "^22.6"
+pyjwt = "^2.11.0"
+opentelemetry-api = "^1.39.1"
+opentelemetry-sdk = "^1.39.1"
+loguru = "^0.7.3"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.1.1"
