@@ -5,20 +5,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from loguru import logger
-
+from src.logger import logger
 from src.config import settings
 from src.agents import create_rag_agent
 from src.integrations.telegram import TelegramBot
-
-# Configure logging
-logger.add(
-    "logs/telegram_bot_{time}.log",
-    rotation="1 day",
-    retention="30 days",
-    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
-    level="INFO"
-)
 
 
 def main():

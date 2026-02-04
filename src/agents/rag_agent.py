@@ -7,16 +7,20 @@ from agno.tools.yfinance import YFinanceTools
 from agno.tools.tavily import TavilyTools
 from agno.db.postgres import PostgresDb
 
+from src.logger import logger
 from src.config import settings
 from src.rag.agno import ContextualAgnoKnowledgeBase
 
-
 def _load_instructions() -> str:
     """Load agent instructions from file."""
-    instructions_file = Path(__file__).parent.parent.parent / "AGENT_INSTRUCTIONS.md"
+    instructions_file = Path(__file__).parent / "RAG_AGENT_INSTRUCTIONS.md"
+    logger.info(f"Looking for instructions file at: {instructions_file.absolute()}")
     if instructions_file.exists():
+        logger.info(f"Loading instructions from found file.")
         return instructions_file.read_text()
-    return "You are a helpful AI assistant."
+    else:
+        logger.info(f"Instructions not found. Using default.")
+        return "You are a helpful AI assistant."
 
 
 def create_rag_agent(

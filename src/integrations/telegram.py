@@ -9,7 +9,7 @@ from telegram.ext import (
     filters,
     ContextTypes,
 )
-from loguru import logger
+from src.logger import logger
 
 
 class TelegramBot:
