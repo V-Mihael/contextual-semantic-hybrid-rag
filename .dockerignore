@@ -19,6 +19,8 @@ venv/
 data/
 notebooks/
 sql/
+logs/
+docs/
 .DS_Store
 .git
 .gitignore
@@ -27,3 +29,6 @@ sql/
 .vscode
 .idea
 *.log
+.ipynb_checkpoints
+.jupyter
+.python-version
