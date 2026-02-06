@@ -11,31 +11,24 @@ from src.integrations.telegram import TelegramBot
 from src.config import settings
 from src.logger import logger
 
-agent = None
+# Singleton bot instance for lifecycle management
 telegram_bot = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize resources on startup and cleanup on shutdown."""
-    global agent, telegram_bot
-    
+    global telegram_bot
+
     logger.info("Starting FastAPI application initialization")
-    
-    try:
-        agent = create_rag_agent()
-        logger.info("Agent initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize agent: {e}")
-        raise
-    
+
     # Initialize Telegram bot with webhook only if RENDER_EXTERNAL_URL is set
-    telegram_token = getattr(settings, 'telegram_bot_token', None)
-    render_url = getattr(settings, 'render_external_url', None)
-    
+    telegram_token = getattr(settings, "telegram_bot_token", None)
+    render_url = getattr(settings, "render_external_url", None)
+
     if telegram_token and render_url:
         try:
-            telegram_bot = TelegramBot(token=telegram_token, agent=agent)
+            telegram_bot = TelegramBot(token=telegram_token)
             await telegram_bot.initialize()  # Initialize for webhook mode
             webhook_url = f"{render_url}/telegram"
             await telegram_bot.set_webhook(webhook_url)
@@ -44,12 +37,14 @@ async def lifespan(app: FastAPI):
             logger.error(f"Failed to initialize Telegram webhook: {e}")
             # Don't raise - allow API to work without Telegram
     elif telegram_token:
-        logger.warning("TELEGRAM_BOT_TOKEN set but RENDER_EXTERNAL_URL not set - webhook disabled")
+        logger.warning(
+            "TELEGRAM_BOT_TOKEN set but RENDER_EXTERNAL_URL not set - webhook disabled"
+        )
     else:
         logger.info("Telegram bot not configured")
-    
+
     yield
-    
+
     logger.info("Shutting down FastAPI application")
 
 
@@ -61,6 +56,7 @@ class Query(BaseModel):
 
     question: str
     session_id: Optional[str] = None
+    user_id: Optional[str] = None
     max_results: Optional[int] = 5
 
 
@@ -68,9 +64,9 @@ class Query(BaseModel):
 async def root():
     """Root endpoint."""
     return {
-        "status": "ok", 
+        "status": "ok",
         "service": "RAG API",
-        "telegram_enabled": telegram_bot is not None
+        "telegram_enabled": telegram_bot is not None,
     }
 
 
@@ -80,14 +76,14 @@ async def telegram_webhook(request: Request):
     if not telegram_bot:
         logger.error("Telegram webhook called but bot not initialized")
         raise HTTPException(status_code=503, detail="Telegram bot not initialized")
-    
+
     try:
         data = await request.json()
         logger.info(f"Telegram webhook received: {data.get('update_id', 'unknown')}")
-        
+
         update = Update.de_json(data, telegram_bot.app.bot)
         await telegram_bot.app.process_update(update)
-        
+
         return {"ok": True}
     except Exception as e:
         logger.error(f"Error processing Telegram webhook: {e}")
@@ -97,21 +93,24 @@ async def telegram_webhook(request: Request):
 @app.post("/query")
 async def query(req: Query):
     """Query the knowledge base with LLM-powered response."""
-    if not agent:
-        raise HTTPException(status_code=503, detail="Agent loading...")
-
-    response = agent.run(req.question, session_id=req.session_id or "default")
-    return {
-        "response": response.content,
-        "tools_used": [m.tool_name for m in response.messages if hasattr(m, 'tool_name')]
-    }
+    # Create fresh agent for API request
+    try:
+        agent = create_rag_agent(
+            user_id=req.user_id, session_id=req.session_id or "default"
+        )
+        response = agent.run(req.question)
+        return {
+            "response": response.content,
+            "tools_used": [
+                m.tool_name for m in response.messages if hasattr(m, "tool_name")
+            ],
+        }
+    except Exception as e:
+        logger.error(f"Error in query endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    return {
-        "status": "ok",
-        "agent_ready": agent is not None,
-        "telegram_ready": telegram_bot is not None
-    }
+    return {"status": "ok", "telegram_ready": telegram_bot is not None}

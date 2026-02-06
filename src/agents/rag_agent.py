@@ -11,6 +11,7 @@ from src.logger import logger
 from src.config import settings
 from src.rag.agno import ContextualAgnoKnowledgeBase
 
+
 def _load_instructions() -> str:
     """Load agent instructions from file."""
     instructions_file = Path(__file__).parent / "RAG_AGENT_INSTRUCTIONS.md"
@@ -27,35 +28,41 @@ def create_rag_agent(
     table_name: str = "economics_enhanced_gemini",
     num_history_runs: int = 5,
     instructions: str = "",
+    user_id: str = None,
+    session_id: str = None,
 ) -> Agent:
     """Create a RAG agent with knowledge base and tools.
-    
+
     Args:
         table_name: Knowledge base table name.
         num_history_runs: Number of history runs to include in context.
         instructions: Agent personality and rules (system prompt).
-        
+        user_id: Unique user identifier for memory isolation.
+        session_id: Unique session identifier for chat history.
+
     Returns:
         Configured Agent instance.
     """
     # Default instructions
     if not instructions:
         instructions = _load_instructions()
-    
+
     # Knowledge base
     kb = ContextualAgnoKnowledgeBase(table_name=table_name)
-    
+
     # Tools
     tools = [YFinanceTools()]
     if settings.tavily_api_key:
         tools.append(TavilyTools(api_key=settings.tavily_api_key))
-    
+
     # Database for sessions
     db = PostgresDb(db_url=settings.db_url)
-    
+
     # Agent
     agent = Agent(
         model=Gemini(id=settings.llm_model, api_key=settings.google_api_key),
+        user_id=user_id,
+        session_id=session_id,
         instructions=instructions,
         knowledge=kb.knowledge,
         search_knowledge=True,
@@ -69,5 +76,5 @@ def create_rag_agent(
         db=db,
         tools=tools,
     )
-    
+
     return agent

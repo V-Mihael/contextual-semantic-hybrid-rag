@@ -12,17 +12,18 @@ from telegram.ext import (
 )
 from src.logger import logger
 from src.integrations.telegram.transcriber import AudioTranscriber
+from src.agents import create_rag_agent
 
 
 class TelegramBot:
     """Telegram bot client."""
 
-    def __init__(self, token: str, agent):
+    def __init__(self, token: str, agent=None):
         """Initialize Telegram bot.
 
         Args:
             token: Telegram bot token from BotFather.
-            agent: Agno agent instance.
+            agent: Deprecated - agent is now created per request for strict isolation.
         """
         self.token = token
         self.agent = agent
@@ -48,59 +49,69 @@ class TelegramBot:
             "Hello! I'm *Spets*, a RAG assistant with economics and habits knowledge, and also web search powers! Send me your questions and I'll answer using my base knowledge and the internet, if needed.\n\n🎤 You can also send voice messages!"
         )
 
-    async def _process_audio_async(self, update: Update, audio_file, format: str, user_name: str, user_id: str):
+    async def _process_audio_async(
+        self, update: Update, audio_file, format: str, user_name: str, user_id: str
+    ):
         """Process audio asynchronously to avoid webhook timeout."""
         start_time = time.time()
-        
+
         try:
             # Download audio
             audio_bytes = await audio_file.download_as_bytearray()
-            
+
             # Transcribe (runs in thread pool to not block)
             loop = asyncio.get_event_loop()
             transcription = await loop.run_in_executor(
-                None, 
-                self.transcriber.transcribe, 
-                bytes(audio_bytes), 
-                format
+                None, self.transcriber.transcribe, bytes(audio_bytes), format
             )
-            logger.info(f"Audio transcribed | user={user_name} text={transcription[:100]}")
-            
+            logger.info(
+                f"Audio transcribed | user={user_name} text={transcription[:100]}"
+            )
+
             # Show typing while processing
             await update.message.chat.send_action("typing")
-            
+
             # Process as text message
-            user_context = f"[User_name: {user_name} (ID: {user_id})]\n[Transcribed from audio]"
+            user_context = (
+                f"[User_name: {user_name} (ID: {user_id})]\n[Transcribed from audio]"
+            )
             message_with_context = f"{user_context}\n{transcription}"
-            
-            response = self.agent.run(message_with_context, session_id=user_id)
+
+            # Create fresh agent for this user/session for strict isolation
+            agent = create_rag_agent(user_id=user_id, session_id=user_id)
+            response = agent.run(message_with_context)
+
             duration = time.time() - start_time
-            
+
             logger.info(
                 f"Response generated | user={user_name} duration={duration:.2f}s "
                 f"response_length={len(response.content)}"
             )
-            
+
             # Send response with transcription
             await update.message.reply_text(
                 f"🎤 *Transcription:* {transcription}\n\n{response.content}",
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
-            
+
         except Exception as e:
             logger.error(f"Error processing audio | user={user_name} error={str(e)}")
-            await update.message.reply_text("Desculpe, ocorreu um erro ao processar o áudio. Tente novamente.")
+            await update.message.reply_text(
+                "Desculpe, ocorreu um erro ao processar o áudio. Tente novamente."
+            )
 
     async def handle_audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle voice and audio messages."""
         user_name = update.message.from_user.first_name
         user_id = str(update.message.from_user.id)
-        
+
         logger.info(f"Audio received | user={user_name} user_id={user_id}")
-        
+
         # Send immediate response
-        await update.message.reply_text("🎤 Processing your audio. Please wait a moment...")
-        
+        await update.message.reply_text(
+            "🎤 Processing your audio. Please wait a moment..."
+        )
+
         # Get audio file info
         if update.message.voice:
             audio_file = await update.message.voice.get_file()
@@ -108,9 +119,11 @@ class TelegramBot:
         else:
             audio_file = await update.message.audio.get_file()
             format = "mp3"
-        
+
         # Process asynchronously (don't await to return quickly to Telegram)
-        asyncio.create_task(self._process_audio_async(update, audio_file, format, user_name, user_id))
+        asyncio.create_task(
+            self._process_audio_async(update, audio_file, format, user_name, user_id)
+        )
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming messages."""
@@ -118,8 +131,10 @@ class TelegramBot:
         user_message = update.message.text
         user_name = update.message.from_user.first_name
         user_id = str(update.message.from_user.id)
-        
-        logger.info(f"Message received | user={user_name} user_id={user_id} message={user_message[:100]}")
+
+        logger.info(
+            f"Message received | user={user_name} user_id={user_id} message={user_message[:100]}"
+        )
 
         # Show typing indicator
         await update.message.chat.send_action("typing")
@@ -129,25 +144,29 @@ class TelegramBot:
             # Add user info to message context
             user_context = f"[User_name: {user_name} (ID: {user_id})]"
             message_with_context = f"{user_context}\n{user_message}"
-            
-            response = self.agent.run(message_with_context, session_id=user_id)
-            tools_used = [m.tool_name for m in response.messages if hasattr(m, 'tool_name')]
+
+            # Create fresh agent for this user/session for strict isolation
+            agent = create_rag_agent(user_id=user_id, session_id=user_id)
+            response = agent.run(message_with_context)
+
+            tools_used = [
+                m.tool_name for m in response.messages if hasattr(m, "tool_name")
+            ]
             duration = time.time() - start_time
-            
+
             logger.info(
                 f"Response generated | user={user_name} session={user_id} duration={duration:.2f}s "
                 f"response_length={len(response.content)} tools={tools_used}"
             )
-            
+
             # Send response
-            await update.message.reply_text(
-                response.content,
-                parse_mode="Markdown"
-            )
-            
+            await update.message.reply_text(response.content, parse_mode="Markdown")
+
         except Exception as e:
             logger.error(f"Error processing message | user={user_name} error={str(e)}")
-            await update.message.reply_text("Desculpe, ocorreu um erro. Tente novamente.")
+            await update.message.reply_text(
+                "Desculpe, ocorreu um erro. Tente novamente."
+            )
 
     async def set_webhook(self, url: str):
         """Set webhook URL for the bot."""
